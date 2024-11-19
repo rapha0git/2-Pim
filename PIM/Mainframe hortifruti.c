@@ -6,6 +6,7 @@
 
 #define ETIQUETAS "etiquetas.dat"
 #define ESTOQUE "estoque.dat"
+#define CLIENTES "clientes.dat"
 
 // Estrutura para representar um item (produto) no estoque
 typedef struct {
@@ -14,6 +15,7 @@ typedef struct {
     float quantidade;
     float preco;
 } Item;
+
 // Estrutura para representar uma etiqueta para faturamento no caixa
 typedef struct {
     long idEtiqueta;
@@ -23,7 +25,21 @@ typedef struct {
     float precoFinal;
     int faturada;
     char dataFaturamento[20];
+    char cpfCliente[12];
 } Etiqueta;
+
+// Estrutura para representar um cliente cadastrado
+typedef struct{
+    char cpf[12];
+    char nome [100];
+    char telefone[20];
+    char email[100];
+} Cliente;
+
+void limparBufferEntrada() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF); // Consumir todos os caracteres até a nova linha
+}
 void cadastrarItem() {
     FILE *file = fopen(ESTOQUE, "r+b"); // Abrir no modo leitura/escrita binário
     Item item;
@@ -106,7 +122,9 @@ void cadastrarItem() {
     fclose(file);
 
     printf("Produto cadastrado com sucesso!\n");
+    limparBufferEntrada();
     system("pause");
+
 }
 void alterarItem() {
     FILE *file = fopen(ESTOQUE, "r+b");
@@ -120,13 +138,14 @@ void alterarItem() {
 
     printf("ID do item a ser alterado: ");
     scanf("%d", &id);
+    limparBufferEntrada();  // Limpar buffer para evitar problemas na leitura
 
     // Lê o arquivo e procura o item pelo ID
     while (fread(&item, sizeof(Item), 1, file)) {
         if (item.id == id) {
             printf("\nNome atual: %s\n", item.nome);
-            printf("Valor atual: %.2f\n", item.preco);
-            printf("Volume atual: %.2f\n", item.quantidade);
+            printf("Valor atual: %.2f R$\n", item.preco);
+            printf("Volume atual: %.2f KG\n", item.quantidade);
 
             do {
                 // Menu de opções de alteração
@@ -137,15 +156,19 @@ void alterarItem() {
                     "\nEscolha uma opcao: ");
                 
                 scanf("%d", &alteracao);
+                limparBufferEntrada();  // Limpar buffer para evitar problemas
 
                 switch (alteracao) {
                     case 1:
                         printf("\nNovo Nome: ");
-                        fgets(item.nome, sizeof(item),stdin);
+                        fgets(item.nome, sizeof(item.nome), stdin);  // Corrigido para usar o tamanho correto
+                        // Remover o '\n' do final, se presente
+                        item.nome[strcspn(item.nome, "\n")] = '\0';
                         break;
                     case 2:
                         printf("\nNovo valor: ");
                         scanf("%f", &item.preco);
+                        limparBufferEntrada();  // Limpar buffer após leitura com scanf
                         break;
                     case 0:
                         printf("Voltando ao menu principal...\n");
@@ -171,6 +194,7 @@ void alterarItem() {
     }
 
     fclose(file);
+    limparBufferEntrada();
     system("pause");
 }
 void excluirItem() {
@@ -193,8 +217,8 @@ void excluirItem() {
             encontrado = 1;
             printf("\nItem encontrado:\n");
             printf("Nome: %s\n", item.nome);
-            printf("Preco: %.2f\n", item.preco);
-            printf("Volume atual: %.2f Kg\n", item.quantidade);
+            printf("Preco: %.2f R$\n", item.preco);
+            printf("Volume atual: %.2f KG\n", item.quantidade);
 
             printf("\nTem certeza que deseja excluir este item? Digite 'SIM' para confirmar: ");
             scanf("%s", confirmacao);
@@ -224,6 +248,7 @@ void excluirItem() {
     if (!encontrado) {
         printf("Item nao encontrado ou exclusao cancelada!\n");
     }
+        limparBufferEntrada();
         system("pause");
 }
 void listarItens() {
@@ -241,12 +266,13 @@ void listarItens() {
         printf("============================\n");
         printf("ID: %d\n", item.id);
         printf("Nome: %s\n", item.nome);
-        printf("Volume: %.2f Kg\n", item.quantidade);
-        printf("Preco: %.2f\n", item.preco);
+        printf("Volume: %.2f KG\n", item.quantidade);
+        printf("Preco: %.2f R$\n", item.preco);
         printf("============================\n\n");
     }
 
     fclose(file);
+    limparBufferEntrada();
     system("pause");
 }
 void entradaEstoque() {
@@ -267,7 +293,7 @@ void entradaEstoque() {
     while (fread(&item, sizeof(Item), 1, file)) {
         if (item.id == id) {
             printf("Item encontrado: %s\n", item.nome);
-            printf("Volume atual: %.2f Kg\n", item.quantidade);
+            printf("Volume atual: %.2f KG\n", item.quantidade);
 
             // Solicita a quantidade de entrada
             printf("Quantidade recebida: ");
@@ -275,7 +301,7 @@ void entradaEstoque() {
 
             // Atualiza a quantidade do item
             item.quantidade += quantidadeEntrada;
-            printf("Novo volume: %.2f\n", item.quantidade);
+            printf("Novo volume: %.2f KG\n", item.quantidade);
 
             // Mover o ponteiro de arquivo para a posição anterior (para reescrever o registro atualizado)
             fseek(file, -sizeof(Item), SEEK_CUR);
@@ -292,6 +318,7 @@ void entradaEstoque() {
     }
 
     fclose(file);
+    limparBufferEntrada();
     system("pause");
 }
 void consultarItem() {
@@ -313,8 +340,8 @@ void consultarItem() {
             printf("\n-- Produto Encontrado --\n");
             printf("ID: %d\n", item.id);
             printf("Nome: %s\n", item.nome);
-            printf("Volume: %.2f\n", item.quantidade);
-            printf("Preco: %.2f\n", item.preco);
+            printf("Volume: %.2f KG\n", item.quantidade);
+            printf("Preco: %.2f R$\n", item.preco);
             printf("------------------------\n");
             encontrado = 1;
             break; // Encerra a busca após encontrar o item
@@ -326,6 +353,7 @@ void consultarItem() {
     }
 
     fclose(file);
+    limparBufferEntrada();
     system("pause");
 }
 void balanca() {
@@ -388,6 +416,7 @@ void balanca() {
 
     fclose(file);
     fclose(fileEtiquetas);
+    limparBufferEntrada();
     system("pause");
 }
 void listarEtiquetas() {
@@ -399,19 +428,22 @@ void listarEtiquetas() {
         return;
     }
 
-    printf("\nEtiquetas nao faturadas:\n");
+    printf("\nEtiquetas emitidas:\n");
 
     while (fread(&etiqueta, sizeof(Etiqueta), 1, file)) {
         // if (etiqueta.faturada == 1) {
             printf("ID da Etiqueta: %ld\n", etiqueta.idEtiqueta);
             printf("ID do Produto: %d\n", etiqueta.idProduto);
             printf("Nome do Produto: %s\n", etiqueta.nomeProduto);
-            printf("Volume: %.2f kg\n", etiqueta.peso);
+            printf("Volume: %.2f KG\n", etiqueta.peso);
             printf("Preco Final: R$ %.2f\n", etiqueta.precoFinal);
                 if(etiqueta.faturada == 1){
             printf("Status de faturamento: Faturada\n");
+                
             printf("Data de faturamento: %s\n", etiqueta.dataFaturamento);
-
+                if(etiqueta.cpfCliente != 0){
+            printf("CPF informado: %s\n", etiqueta.cpfCliente);
+                }
             } else {
             printf("Status de faturamento: Nao faturada\n");
             }
@@ -420,6 +452,122 @@ void listarEtiquetas() {
     }
 
     fclose(file);
+    limparBufferEntrada();
+    system("pause");
+}
+void cadastrarCliente(char cpf[]) {
+    FILE *file = fopen(CLIENTES, "a+b");
+    if (!file) {
+        printf("Erro ao abrir o arquivo de clientes!\n");
+        return;
+    }
+
+    Cliente cliente;
+    strcpy(cliente.cpf, cpf); // Armazena o CPF como string
+
+    printf("\n========Cadastro de Cliente========\n");
+
+    printf("Nome: ");
+    fgets(cliente.nome, sizeof(cliente.nome), stdin);
+    size_t len = strlen(cliente.nome);
+    if (len > 0 && cliente.nome[len - 1] == '\n') {
+        cliente.nome[len - 1] = '\0'; // Remove a nova linha
+    }
+
+    printf("Telefone: ");
+    fgets(cliente.telefone, sizeof(cliente.telefone), stdin);
+    len = strlen(cliente.telefone);
+    if (len > 0 && cliente.telefone[len - 1] == '\n') {
+        cliente.telefone[len - 1] = '\0'; // Remove a nova linha
+    }
+
+    printf("Email: ");
+    fgets(cliente.email, sizeof(cliente.email), stdin);
+    len = strlen(cliente.email);
+    if (len > 0 && cliente.email[len - 1] == '\n') {
+        cliente.email[len - 1] = '\0'; // Remove a nova linha
+    }
+
+    fwrite(&cliente, sizeof(Cliente), 1, file);
+    fclose(file);
+
+    printf("Cliente cadastrado com sucesso!\n");
+    limparBufferEntrada();
+    system("pause");
+}
+int validarCPFCliente(char cpf[]) {
+    FILE *file = fopen(CLIENTES, "rb");
+    Cliente cliente;
+    int encontrado = 0;
+
+    if (file) {
+        // Busca o CPF no arquivo de clientes
+        while (fread(&cliente, sizeof(Cliente), 1, file)) {
+            if (strcmp(cliente.cpf, cpf) == 0) { // Comparação de strings
+                encontrado = 1;
+                break;
+            }
+        }
+        fclose(file);
+    } else {
+        printf("Erro ao abrir o arquivo de clientes!\n");
+    }
+    limparBufferEntrada();
+    return encontrado;
+}
+void exibirCliente(Cliente cliente) {
+    printf("\n--- Informacoes do Cliente ---\n");
+    printf("CPF: %s\n", cliente.cpf);
+    printf("Nome: %s\n", cliente.nome);
+    printf("Telefone: %s\n", cliente.telefone);
+    printf("Email: %s\n", cliente.email);
+    printf("------------------------------\n");
+    limparBufferEntrada();
+}
+void alterarCadastroCliente() {
+    FILE *file = fopen(CLIENTES, "r+b");
+    Cliente cliente;
+    char cpf[12];  // O CPF é agora uma string (considerando o formato como "12345678901" com 11 caracteres)
+    int encontrado = 0;
+
+    if (!file) {
+        printf("Erro ao abrir o arquivo de clientes!\n");
+        return;
+    }
+
+    printf("Digite o CPF do cliente que deseja alterar: ");
+    scanf("%s", cpf);  // Lê o CPF como string
+
+    while (fread(&cliente, sizeof(Cliente), 1, file)) {
+        if (strcmp(cliente.cpf, cpf) == 0) {  // Comparação de strings
+            encontrado = 1;
+            printf("Cliente encontrado:\n");
+            exibirCliente(cliente);
+
+            printf("Digite o novo nome (atual: %s): ", cliente.nome);
+            scanf(" %[^\n]", cliente.nome);
+            printf("Digite o novo telefone (atual: %s): ", cliente.telefone);
+            scanf(" %[^\n]", cliente.telefone);
+            printf("Digite o novo email (atual: %s): ", cliente.email);
+            scanf(" %[^\n]", cliente.email);
+
+            // Atualiza o registro no arquivo
+            fseek(file, -sizeof(Cliente), SEEK_CUR);
+            fwrite(&cliente, sizeof(Cliente), 1, file);
+
+            printf("Cadastro do cliente atualizado com sucesso!\n");
+            exibirCliente(cliente);
+            break;
+        }
+    }
+
+    if (!encontrado) {
+        printf("Cliente com CPF %s nao encontrado!\n", cpf);
+    }
+
+    fclose(file);
+
+    limparBufferEntrada();
     system("pause");
 }
 void faturamentoEtiquetas() {
@@ -428,10 +576,12 @@ void faturamentoEtiquetas() {
     Etiqueta etiqueta;
     Item item;
     long idEtiqueta;
+    char cpfCliente[12];  // CPF como string
     int encontrado = 0;
+    char confirmar[4];
 
     if (!fileEtiquetas || !fileEstoque) {
-        printf("Erro ao abrir os arquivos!\n");
+        printf("Erro ao abrir os arquivos de etiquetas ou estoque!\n");
         return;
     }
 
@@ -447,18 +597,36 @@ void faturamentoEtiquetas() {
                 break;
             }
 
+            // Exibe informações da etiqueta
             printf("\n--- Informacoes da Etiqueta ---\n");
             printf("Produto: %s\n", etiqueta.nomeProduto);
             printf("Peso: %.2f g\n", etiqueta.peso);
             printf("Preco final: R$ %.2f\n", etiqueta.precoFinal);
             printf("-------------------------------\n");
 
+            // Solicitar CPF do cliente
+            printf("Deseja vincular o faturamento ao CPF do cliente? (Sim/Nao): ");
+            scanf("%s", confirmar);
+
+            if (strcmp(confirmar, "SIM") == 0 || strcmp(confirmar, "Sim") == 0 || strcmp(confirmar, "sim") == 0) {
+                printf("Digite o CPF do cliente: ");
+                scanf("%s", cpfCliente);  // Lê o CPF como string
+
+                // Verifica se o CPF já está cadastrado
+                if (!validarCPFCliente(cpfCliente)) {
+                    printf("CPF nao cadastrado. Realizando cadastro rapido...\n");
+                    limparBufferEntrada();
+                    cadastrarCliente(cpfCliente);
+                }
+                strcpy(etiqueta.cpfCliente, cpfCliente);  // Atribui o CPF à etiqueta
+            } else {
+                strcpy(etiqueta.cpfCliente, "");  // CPF não informado
+            }
+
             // Confirma a finalização da transação
-            char confirmar[4];
             printf("Confirmar a finalizacao da transacao? (Sim/Nao): ");
             scanf("%s", confirmar);
 
-            // Verifica se a confirmação é exatamente "sim", "Sim" ou "SIM"
             if (strcmp(confirmar, "SIM") == 0 || strcmp(confirmar, "Sim") == 0 || strcmp(confirmar, "sim") == 0) {
                 // Atualiza o estoque
                 while (fread(&item, sizeof(Item), 1, fileEstoque)) {
@@ -480,8 +648,21 @@ void faturamentoEtiquetas() {
                 fseek(fileEtiquetas, -sizeof(Etiqueta), SEEK_CUR);
                 fwrite(&etiqueta, sizeof(Etiqueta), 1, fileEtiquetas);
 
+                // Imprime a nota fiscal
+                printf("\n--- Nota Fiscal ---\n");
+                printf("Produto: %s\n", etiqueta.nomeProduto);
+                printf("Peso: %.2f g\n", etiqueta.peso);
+                printf("Preco final: R$ %.2f\n", etiqueta.precoFinal);
+
+                // Verifica se o CPF foi informado (diferente de "")
+                if (strlen(etiqueta.cpfCliente) > 0) {
+                    printf("CPF do Cliente: %s\n", etiqueta.cpfCliente);
+                }
+
+                printf("Data de Faturamento: %s\n", etiqueta.dataFaturamento);
+                printf("---------------------\n");
+
                 printf("Transacao finalizada e estoque atualizado!\n");
-                printf("Data e hora de faturamento: %s\n", etiqueta.dataFaturamento);
             } else {
                 printf("Transacao cancelada.\n");
             }
@@ -497,6 +678,7 @@ void faturamentoEtiquetas() {
 
     fclose(fileEtiquetas);
     fclose(fileEstoque);
+    limparBufferEntrada();
     system("pause");
 }
 void excluirEtiquetas() {
@@ -544,12 +726,13 @@ void excluirEtiquetas() {
         printf("Nao havia etiquetas nao faturadas para excluir.\n");
     }
 
+    limparBufferEntrada();
     system("pause");
 }
 void menuConsultas(){
     int opcao = -1;  // Inicializa fora do intervalo de opções válidas
     char entrada[10];  // Buffer para capturar a entrada do usuário
-    char *endptr;      // Ponteiro para verificar a validade da conversão
+    char *endptr;      // Ponteiro para verificar a validade da conveR$ão
 
     do {
         printf("\n======== Painel de consultas - rede VERDE - VIVA ========\n");
@@ -570,6 +753,8 @@ void menuConsultas(){
         // Verifica se houve algum caractere inválido na conversão
         if (*endptr != '\0' || strlen(entrada) == 0) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 3.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;    // Volta ao início do loop
         }
@@ -577,6 +762,8 @@ void menuConsultas(){
         // Verifica se o valor está dentro do intervalo esperado
         if (opcao < 0 || opcao > 3) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 3.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;
         }
@@ -593,17 +780,19 @@ void menuConsultas(){
                 break;
             case 0:
                 printf("Voltando...\n");
-                system("pause");
+                    system("pause");
                 break;
             default:
-                printf("Opcao invalida! Por favor, insira um numero entre 0 e 5.\n");
+                printf("Opcao invalida! Por favor, insira um numero entre 0 e 3.\n");
+                    limparBufferEntrada();
+                    system("pause");
         }
     } while (opcao != 0);
 }
 void controleEstoque(){
     int opcao = -1;  // Inicializa fora do intervalo de opções válidas
     char entrada[10];  // Buffer para capturar a entrada do usuário
-    char *endptr;      // Ponteiro para verificar a validade da conversão
+    char *endptr;      // Ponteiro para verificar a validade da conveR$ão
 
     do {
         printf("\n======== Controle de estoque - rede VERDE - VIVA ========\n");
@@ -623,9 +812,11 @@ void controleEstoque(){
         // Converte a string para número inteiro e verifica se é válida
         opcao = strtol(entrada, &endptr, 10);
         
-        // Verifica se houve algum caractere inválido na conversão
+        // Verifica se houve algum caractere inválido na conveR$ão
         if (*endptr != '\0' || strlen(entrada) == 0) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 5.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;    // Volta ao início do loop
         }
@@ -633,6 +824,8 @@ void controleEstoque(){
         // Verifica se o valor está dentro do intervalo esperado
         if (opcao < 0 || opcao > 5) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 5.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;
         }
@@ -655,23 +848,26 @@ void controleEstoque(){
                 break;                                
             case 0:
                 printf("Voltando...\n");
-                system("pause");
+                    system("pause");
                 break;
             default:
                 printf("Opcao invalida! Por favor, insira um numero entre 0 e 5.\n");
+                    limparBufferEntrada();
+                    system("pause");
         }
     } while (opcao != 0);
 }
 void caixaRegistradora(){
     int opcao = -1;  // Inicializa fora do intervalo de opções válidas
     char entrada[10];  // Buffer para capturar a entrada do usuário
-    char *endptr;      // Ponteiro para verificar a validade da conversão
+    char *endptr;      // Ponteiro para verificar a validade da conveR$ão
 
     do {
         printf("\n======== Caixa registradora - rede VERDE - VIVA ========\n");
         printf("1. Faturar etiqueta\n");
         printf("2. Listar etiquetas emitidas\n");
         printf("3. Excluir etiquetas nao faturadas\n");
+        printf("4. Alterar cadastro de cliente\n");
         printf("0. Voltar\n\n");
         printf("Escolha uma opcao: ");
         
@@ -683,16 +879,20 @@ void caixaRegistradora(){
         // Converte a string para número inteiro e verifica se é válida
         opcao = strtol(entrada, &endptr, 10);
         
-        // Verifica se houve algum caractere inválido na conversão
+        // Verifica se houve algum caractere inválido na conveR$ão
         if (*endptr != '\0' || strlen(entrada) == 0) {
-            printf("Opcao invalida! Por favor, insira um numero entre 0 e 3.\n");
+            printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;    // Volta ao início do loop
         }
 
         // Verifica se o valor está dentro do intervalo esperado
-        if (opcao < 0 || opcao > 3) {
-            printf("Opcao invalida! Por favor, insira um numero entre 0 e 3.\n");
+        if (opcao < 0 || opcao > 4) {
+            printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;
         }
@@ -707,27 +907,34 @@ void caixaRegistradora(){
             case 3:
                 excluirEtiquetas();
                 break;
+            case 4:
+                alterarCadastroCliente();
+                break;    
             case 0:
                 printf("Voltando...\n");
                 system("pause");
+
                 break;
             default:
-                printf("Opcao invalida! Por favor, insira um numero entre 0 e 5.\n");
+                printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                    limparBufferEntrada();
+                    system("pause");
         }
     } while (opcao != 0);
 }
+
 // Iniciação do programa
 int main() {
     int opcao = -1;  // Inicializa fora do intervalo de opções válidas
     char entrada[10];  // Buffer para capturar a entrada do usuário
-    char *endptr;      // Ponteiro para verificar a validade da conversão
+    char *endptr;      // Ponteiro para verificar a validade da conveR$ão
 
     do {
         printf("\n======== Mainframe - Rede VERDE-VIVA ========\n");
         printf("1. Consultas\n");
         printf("2. Controle de estoque\n");
-        printf("3. Caixa registradora\n");
-        printf("4. Pesagem para venda\n");
+        printf("3. Pesagem para venda\n");
+        printf("4. Caixa registradora\n");        
         printf("0. Sair\n\n");
         printf("Escolha uma opcao: ");
         
@@ -739,9 +946,11 @@ int main() {
         // Converte a string para número inteiro e verifica se é válida
         opcao = strtol(entrada, &endptr, 10);
         
-        // Verifica se houve algum caractere inválido na conversão
+        // Verifica se houve algum caractere inválido na conveR$ão
         if (*endptr != '\0' || strlen(entrada) == 0) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                limparBufferEntrada();
+                system("pause");    
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;    // Volta ao início do loop
         }
@@ -749,6 +958,8 @@ int main() {
         // Verifica se o valor está dentro do intervalo esperado
         if (opcao < 0 || opcao > 4) {
             printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                limparBufferEntrada();
+                system("pause");
             opcao = -1;  // Redefine `opcao` para manter o loop ativo
             continue;
         }
@@ -761,16 +972,19 @@ int main() {
                 controleEstoque();
                 break;
             case 3:
-                caixaRegistradora();
+                balanca();
                 break;
             case 4:
-                balanca();
+                caixaRegistradora();
                 break;
             case 0:
                 printf("Saindo...\n");
+                    system("pause");
                 break;
             default:
                 printf("Opcao invalida! Por favor, insira um numero entre 0 e 4.\n");
+                    limparBufferEntrada();
+                    system("pause");            
         }
     } while (opcao != 0);
 
